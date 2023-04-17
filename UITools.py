@@ -47,13 +47,18 @@ class Button:
         self.outer_box = pygame.Rect(outer_box_top_left, outer_box_size)
 
         self.phase_on_press = phase_on_press
+        self.hovered_and_no_press = False
 
     def render(self, game):
         if self.outer_box.collidepoint(pygame.mouse.get_pos()):
             pygame.draw.rect(game.screen, self.color, self.outer_box)
             self.hover_text.render(game)
             if pygame.mouse.get_pressed()[0]:
-                game.game_phase = self.phase_on_press
+                if self.hovered_and_no_press:
+                    game.game_phase = self.phase_on_press
+            else:
+                self.hovered_and_no_press = True
         else:
+            self.hovered_and_no_press = False
             pygame.draw.rect(game.screen, self.color, self.outer_box, Button.OUTER_BOX_THICKNESS)
             self.text.render(game)
