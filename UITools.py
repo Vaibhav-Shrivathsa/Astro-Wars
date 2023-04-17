@@ -7,7 +7,7 @@ class UI:
     WINDOW_CENTER = WINDOW_SIZE / 2
     WINDOW_MIN_COORD_SIZE = min(WINDOW_SIZE[0], WINDOW_SIZE[1])
     pygame.font.init()
-    TEXT_FONT = pygame.font.SysFont('Lucida Console', 70)
+    TEXT_FONT = pygame.font.SysFont('Lucida Console', 100)
 
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -36,8 +36,8 @@ class Button:
 
     def __init__(self, text, color, hover_color, pos, size, phase_on_press):
         self.color = color
-        self.text = Text(text, color, pos, size)
-        self.hover_text = Text(text, hover_color, pos, size)
+        self.text = Text(text, color, pos, size / Button.OUTER_BOX_SCALE)
+        self.hover_text = Text(text, hover_color, pos, size / Button.OUTER_BOX_SCALE)
 
         pos = pos.elementwise() * UI.WINDOW_SIZE
         text_size = Vector2(self.text.surface.get_size())
