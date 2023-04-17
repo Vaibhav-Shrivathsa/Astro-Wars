@@ -7,10 +7,6 @@ from GameInfo import *
 
 
 def intro_menu_phase(game):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game.game_phase = GamePhase.GAME_EXITED
-
     game.screen.fill(UI.BLACK)
     intro_menu_phase.play_button.render(game)
     intro_menu_phase.credits_button.render(game)
@@ -32,10 +28,6 @@ intro_menu_phase.title_text = UITools.Text("ASTRO WARS", UI.WHITE,
 
 
 def credit_menu_phase(game):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game.game_phase = GamePhase.GAME_EXITED
-
     game.screen.fill(UI.BLACK)
     credit_menu_phase.inspired_text.render(game)
     credit_menu_phase.author_text.render(game)
@@ -54,10 +46,6 @@ credit_menu_phase.return_button = UITools.Button("RETURN", UI.WHITE, UI.BLACK,
                                                  GamePhase.INTRO_MENU)
 
 def info_menu_phase(game):
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            game.game_phase = GamePhase.GAME_EXITED
-
     game.screen.fill(UI.BLACK)
     info_menu_phase.player_1_instructions.render(game)
     info_menu_phase.player_2_instructions.render(game)

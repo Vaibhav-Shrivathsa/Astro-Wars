@@ -17,3 +17,4 @@ class GamePhase:
     GAME_EXITED = 2
     CREDITS_MENU = 3
     INFO_MENU = 4
+    GAME_PAUSED = 5
