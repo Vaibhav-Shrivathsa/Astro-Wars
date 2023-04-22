@@ -85,9 +85,9 @@ class Circle:
         return (self.center - point).length_squared <= self.radius ** 2
 
     def is_colliding_with_circle(self, circle):
-        max_radius = max(circle.radius, self.radius)
-        return self.center.distance_squared_to(
-            circle.center) <= max_radius ** 2
+        touching_distance = circle.radius + self.radius
+        return self.center.distance_squared_to(circle.center) <= \
+            touching_distance ** 2
 
     def is_colliding_with_rect(self, rect):
         boundary_point = rect.closest_point_on_boundary_to(self.center)
