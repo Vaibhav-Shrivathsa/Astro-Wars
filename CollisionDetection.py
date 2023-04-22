@@ -112,7 +112,8 @@ class Circle:
         Given either a rectangle or inverted rectangle and the
         initial velocity of this circle, gets the point that
         circle was likely at right before it entered the rectangle and
-        returns a new velocity to account for normal force
+        returns a new velocity to account for normal force.
+        (Assumes that an intersection did occur)
         """
         closest_point_on_boundary = rect.closest_point_on_boundary_to(self.center)
         rect_point_deepest_in_circle = closest_point_on_boundary
@@ -125,14 +126,13 @@ class Circle:
         circle_point_deepest_in_rect = self.center + penetration_vector
         resolve_displacement = rect_point_deepest_in_circle - circle_point_deepest_in_rect
 
-        new_vel = None
-        if closest_point_on_boundary[0] == rect.top_left[0] or \
-                closest_point_on_boundary[0] == rect.bottom_right[0]:
-            new_vel = Vector2(0, self_vel[1])
+        if resolve_displacement.magnitude_squared() >= 1e-6:
+            # pygame's projection method needs the vector projected on to have a large enough magnitude
+            velocity_into_wall = self_vel.project(resolve_displacement)
         else:
-            new_vel = Vector2(self_vel[0], 0)
+            velocity_into_wall = Vector2(0, 0)
 
-        return self.center + resolve_displacement, new_vel
+        return self.center + resolve_displacement, self_vel - velocity_into_wall
 
     def fix_collision_with_rect(self, rect, self_vel):
         """

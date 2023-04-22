@@ -183,6 +183,7 @@ def handle_bullets(game, match_state):
                                 ship_dir * Bullet.SPEED)
             match_state.bullets.add(new_bullet)
 
+    # Fun Easter Egg: 0 Shakes the Screen
     if keys[pygame.K_0]:
         match_state.camera.start_shaking()
 
@@ -303,6 +304,8 @@ class Camera:
         for bullet in bullets:
             bullet_pixel_pos = self.game_coord_to_pixel_coord(bullet.pos)
             if bullet_pixel_pos[0] >= 0:
+                # pygame will render a large horizontal white line if the
+                # x coordinate of the circle is off of the screen
                 pygame.draw.circle(self.game.screen, Bullet.COLOR,
                                    self.game_coord_to_pixel_coord(bullet.pos),
                                    Bullet.RADIUS *
