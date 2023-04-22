@@ -20,6 +20,7 @@ class Text:
     """
     Class that Represents Displayable Text
     """
+
     def __init__(self, text, color, pos, size):
         """
         Initializes the Text Label
@@ -32,8 +33,7 @@ class Text:
         self.surface = UI.TEXT_FONT.render(text, False, color)
         text_width = self.surface.get_size()[0]
 
-        new_text_size = Vector2(self.surface.get_size()) * \
-                            (UI.WINDOW_SIZE[0] * size) / text_width
+        new_text_size = Vector2(self.surface.get_size()) * (UI.WINDOW_SIZE[0] * size) / text_width
         self.surface = pygame.transform.scale(self.surface, new_text_size)
 
         pos = pos.elementwise() * UI.WINDOW_SIZE

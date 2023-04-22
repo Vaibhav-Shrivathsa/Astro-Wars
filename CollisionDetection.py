@@ -15,6 +15,7 @@ class InvertedRectangle:
     Class that represents a shape that is the complement of a rectangle
     (everything outside the rectangle constitutes the shape)
     """
+
     def __init__(self, top_left, bottom_right):
         self.top_left = top_left
         self.bottom_right = bottom_right
@@ -24,9 +25,9 @@ class InvertedRectangle:
                     self.bottom_right[1] < point[1] < self.top_left[1])
 
     def closest_point_on_boundary_to(self, point):
-        boundary_point = \
-            Vector2(clamp(self.top_left[0], point[0], self.bottom_right[0]),
-                    clamp(self.bottom_right[1], point[1], self.top_left[1]))
+        boundary_point = Vector2(clamp(self.top_left[0], point[0], self.bottom_right[0]),
+                                 clamp(self.bottom_right[1], point[1], self.top_left[1]))
+
         if boundary_point == point:
             left_dist = point[0] - self.top_left[0]
             right_dist = self.bottom_right[0] - point[0]
@@ -55,9 +56,9 @@ class Rectangle:
             self.bottom_right[1] <= point[1] <= self.top_left[1]
 
     def closest_point_on_boundary_to(self, point):
-        boundary_point = Vector2(
-            clamp(self.top_left[0], point[0], self.bottom_right[0]),
-            clamp(self.bottom_right[1], point[1], self.top_left[1]))
+        boundary_point = Vector2(clamp(self.top_left[0], point[0], self.bottom_right[0]),
+                                 clamp(self.bottom_right[1], point[1], self.top_left[1]))
+
         if boundary_point == point:
             left_dist = self.top_left[0] - point[0]
             right_dist = point[0] - self.bottom_right[0]
@@ -86,20 +87,17 @@ class Circle:
 
     def is_colliding_with_circle(self, circle):
         touching_distance = circle.radius + self.radius
-        return self.center.distance_squared_to(circle.center) <= \
-            touching_distance ** 2
+        return self.center.distance_squared_to(circle.center) <= touching_distance ** 2
 
     def is_colliding_with_rect(self, rect):
         boundary_point = rect.closest_point_on_boundary_to(self.center)
-        return self.center.distance_squared_to(
-            boundary_point) < self.radius ** 2 or \
-            rect.contains_point(self.center)
+        return self.center.distance_squared_to(boundary_point) < self.radius ** 2 \
+            or rect.contains_point(self.center)
 
     def is_colliding_with_inverted_rect(self, rect):
         boundary_point = rect.closest_point_on_boundary_to(self.center)
-        return self.center.distance_squared_to(
-            boundary_point) < self.radius ** 2 or \
-            rect.contains_point(self.center)
+        return self.center.distance_squared_to(boundary_point) < self.radius ** 2 \
+            or rect.contains_point(self.center)
 
     def fix_collision_with_circle(self, circle):
         """
@@ -107,8 +105,7 @@ class Circle:
         with the other circle
         """
         if self.is_colliding_with_circle(circle):
-            self.center = (self.center - circle.center).scale_to_length(
-                circle.radius) + circle.center
+            self.center = (self.center - circle.center).scale_to_length(circle.radius) + circle.center
 
     def get_entry_point_into_rect(self, rect, self_vel):
         """
@@ -117,19 +114,16 @@ class Circle:
         circle was likely at right before it entered the rectangle and
         returns a new velocity to account for normal force
         """
-        closest_point_on_boundary = rect.closest_point_on_boundary_to(
-            self.center)
+        closest_point_on_boundary = rect.closest_point_on_boundary_to(self.center)
         rect_point_deepest_in_circle = closest_point_on_boundary
 
         penetration_vector = rect_point_deepest_in_circle - self.center
         if penetration_vector == Vector2(0, 0):
-            penetration_vector = (rect.top_left + rect.bottom_right) / 2 \
-                                 - self.center
+            penetration_vector = (rect.top_left + rect.bottom_right) / 2 - self.center
         penetration_vector.scale_to_length(self.radius)
 
         circle_point_deepest_in_rect = self.center + penetration_vector
-        resolve_displacement = rect_point_deepest_in_circle - \
-                               circle_point_deepest_in_rect
+        resolve_displacement = rect_point_deepest_in_circle - circle_point_deepest_in_rect
 
         new_vel = None
         if closest_point_on_boundary[0] == rect.top_left[0] or \
@@ -147,8 +141,7 @@ class Circle:
         that occurs after colliding with the rectangle
         """
         if self.is_colliding_with_rect(rect):
-            self.center, new_vel = self.get_entry_point_into_rect(rect,
-                                                                  self_vel)
+            self.center, new_vel = self.get_entry_point_into_rect(rect, self_vel)
             return self.center, new_vel
         return self.center, self_vel
 
@@ -158,8 +151,7 @@ class Circle:
         with the other inverted rectangle
         """
         if self.is_colliding_with_inverted_rect(rect):
-            self.center, new_vel = self.get_entry_point_into_rect(rect,
-                                                                  self_vel)
+            self.center, new_vel = self.get_entry_point_into_rect(rect, self_vel)
             return self.center, new_vel
         return self.center, self_vel
 

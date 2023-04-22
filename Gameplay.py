@@ -93,23 +93,17 @@ class PlayerShip:
         self.vel.clamp_magnitude_ip(PlayerShip.MAX_SPEED)
         self.pos = self.pos + (self.vel * dt)
 
-        ship_collider = \
-            CollisionDetection.Circle(self.pos,
-                                      PlayerShip.SHIP_COLLIDER_RADIUS)
+        ship_collider = CollisionDetection.Circle(self.pos, PlayerShip.SHIP_COLLIDER_RADIUS)
         for destructable_block in stage.destructable_blocks:
-            self.pos, self.vel = ship_collider.fix_collision_with_rect(
-                destructable_block.collider, self.vel)
+            self.pos, self.vel = ship_collider.fix_collision_with_rect(destructable_block.collider, self.vel)
 
         for indestructable_block in stage.indestructable_blocks:
-            self.pos, self.vel = ship_collider.fix_collision_with_rect(
-                indestructable_block.collider, self.vel)
+            self.pos, self.vel = ship_collider.fix_collision_with_rect(indestructable_block.collider, self.vel)
 
         if stage.outer_boundary is not None:
-            if ship_collider.is_colliding_with_inverted_rect(
-                    stage.outer_boundary.collider):
-                self.pos, self.vel = \
-                    ship_collider.fix_collision_with_inverted_rect(
-                        stage.outer_boundary.collider, self.vel)
+            if ship_collider.is_colliding_with_inverted_rect(stage.outer_boundary.collider):
+                self.pos, self.vel = ship_collider.fix_collision_with_inverted_rect(stage.outer_boundary.collider,
+                                                                                    self.vel)
 
     def turn_if_player_input(self, dt, turn_key):
         keys = pygame.key.get_pressed()
@@ -132,18 +126,14 @@ class Bullet:
 
         bullet_collider = CollisionDetection.Circle(self.pos, Bullet.RADIUS)
 
-        player1_collider = \
-            CollisionDetection.Circle(match_state.player1.pos,
-                                      PlayerShip.HIT_CIRCLE_RADIUS)
+        player1_collider = CollisionDetection.Circle(match_state.player1.pos, PlayerShip.HIT_CIRCLE_RADIUS)
         if bullet_collider.is_colliding_with_circle(player1_collider):
             self.destroyed = True
             match_state.camera.start_shaking()
             match_state.player1.died = True
             return
 
-        player2_collider = \
-            CollisionDetection.Circle(match_state.player2.pos,
-                                      PlayerShip.HIT_CIRCLE_RADIUS)
+        player2_collider = CollisionDetection.Circle(match_state.player2.pos, PlayerShip.HIT_CIRCLE_RADIUS)
         if bullet_collider.is_colliding_with_circle(player2_collider):
             self.destroyed = True
             match_state.camera.start_shaking()
@@ -151,23 +141,56 @@ class Bullet:
             return
 
         for destructable_block in stage.destructable_blocks:
-            if bullet_collider.is_colliding_with_rect(
-                    destructable_block.collider):
+            if bullet_collider.is_colliding_with_rect(destructable_block.collider):
                 self.destroyed = True
                 match_state.camera.start_shaking()
                 stage.destructable_blocks.remove(destructable_block)
                 return
 
         for indestructable_block in stage.indestructable_blocks:
-            if bullet_collider.is_colliding_with_rect(
-                    indestructable_block.collider):
+            if bullet_collider.is_colliding_with_rect(indestructable_block.collider):
                 self.destroyed = True
                 return
 
         if stage.outer_boundary is not None:
-            if bullet_collider.is_colliding_with_inverted_rect(
-                    stage.outer_boundary.collider):
+            if bullet_collider.is_colliding_with_inverted_rect(stage.outer_boundary.collider):
                 self.destroyed = True
+
+
+def handle_bullets(game, match_state):
+    """
+    Handles the destruction of bullets when they collide with objects,
+    the effects of their collision on destructable objects,
+    and spawns new bullets when players shoot
+    """
+    keys = pygame.key.get_pressed()
+    curr_time = time.time()
+    if keys[GameKeyBindings.PLAYER1_SHOOT]:
+        if curr_time - match_state.player1.last_shot_time >= PlayerShip.TIME_BETWEEN_SHOTS:
+            match_state.player1.last_shot_time = curr_time
+            ship_dir = match_state.player1.ship_direction()
+            ship_pos = match_state.player1.pos
+            new_bullet = Bullet(ship_pos + ship_dir * PlayerShip.BULLET_SPAWN_DIST,
+                                ship_dir * Bullet.SPEED)
+            match_state.bullets.add(new_bullet)
+
+    if keys[GameKeyBindings.PLAYER2_SHOOT]:
+        if curr_time - match_state.player2.last_shot_time >= PlayerShip.TIME_BETWEEN_SHOTS:
+            match_state.player2.last_shot_time = curr_time
+            ship_dir = match_state.player2.ship_direction()
+            ship_pos = match_state.player2.pos
+            new_bullet = Bullet(ship_pos + ship_dir * PlayerShip.BULLET_SPAWN_DIST,
+                                ship_dir * Bullet.SPEED)
+            match_state.bullets.add(new_bullet)
+
+    if keys[pygame.K_0]:
+        match_state.camera.start_shaking()
+
+    dt = game.clock.get_time() / 1000
+    for bullet in match_state.bullets:
+        bullet.pos_update(dt, match_state.stage, match_state)
+    match_state.bullets = set(
+        filter(lambda x: not x.destroyed, match_state.bullets))
 
 
 class Camera:
@@ -180,8 +203,10 @@ class Camera:
     VIEW_SIZE_PADDING = 6
 
     TOTAL_SHAKE_DURATION = 0.3
-    SHAKE_OFFSET_HOLD_TIME = 0.03
-    SHAKE_MAX_MAGNITUDE = 10  # in pixels
+    SHAKE_OFFSET_HOLD_TIME = 0.03  # how long each camera jolt in the shake lasts
+    SHAKE_MAX_MAGNITUDE = 10  # maximum displacement of the camera in pixels
+
+    # the magnitude of the shake linearly decreases as the shake progresses
 
     def __init__(self, game, center, size_of_view):
         """
@@ -217,8 +242,7 @@ class Camera:
         screen
         """
         camera_center = self.center + self.current_shake_offset
-        pixel_coord = (game_coord - camera_center) * \
-                      self.coord_to_pixel_factor()
+        pixel_coord = (game_coord - camera_center) * self.coord_to_pixel_factor()
         pixel_coord.update(pixel_coord[0], -pixel_coord[1])
         pixel_coord += UI.WINDOW_CENTER
         return pixel_coord
@@ -236,18 +260,14 @@ class Camera:
         self.size_of_view = min(self.size_of_view, Camera.MAX_SIZE_OF_VIEW)
 
     def render_player_ship(self, ship, ship_image):
-        ship_render_image = \
-            pygame.transform.scale(ship_image, PlayerShip.SHIP_SIZE *
-                                   self.coord_to_pixel_factor())
-        ship_render_image = pygame.transform.rotate(ship_render_image,
-                                                    ship.angle)
+        ship_render_image = pygame.transform.scale(ship_image, PlayerShip.SHIP_SIZE * self.coord_to_pixel_factor())
+        ship_render_image = pygame.transform.rotate(ship_render_image, ship.angle)
 
         # Pygame Renders Images With Top Left Corner Of Image At Given Position
         offset = Vector2(ship_render_image.get_size()) / 2
 
         self.game.screen.blit(ship_render_image,
-                              self.game_coord_to_pixel_coord(
-                                  ship.pos) - offset)
+                              self.game_coord_to_pixel_coord(ship.pos) - offset)
 
     def render_block(self, center, size, color, thickness):
         offset = size / 2
@@ -294,11 +314,14 @@ class Camera:
             self.shake_started_time = time.time()
             self.current_offset_number = 0
             self.current_shake_offset = \
-                pygame.Vector2.from_polar(
-                    (Camera.SHAKE_MAX_MAGNITUDE, random.random() * 360)) \
-                / self.coord_to_pixel_factor()
+                pygame.Vector2.from_polar((Camera.SHAKE_MAX_MAGNITUDE, random.random() * 360))
+            self.current_shake_offset /= self.coord_to_pixel_factor()
 
     def update_internal_time(self):
+        """
+        Handles updating the current time of the camera and appropriately
+        handles updating state related to camera shaking
+        """
         self.current_time = time.time()
         if self.is_shaking:
             time_shaken = self.current_time - self.shake_started_time
@@ -306,18 +329,14 @@ class Camera:
                 self.is_shaking = False
                 self.current_shake_offset = Vector2(0, 0)
             else:
-                curr_shake_offset_number = \
-                    time_shaken // Camera.SHAKE_OFFSET_HOLD_TIME
+                curr_shake_offset_number = time_shaken // Camera.SHAKE_OFFSET_HOLD_TIME
 
                 if curr_shake_offset_number != self.current_offset_number:
                     self.current_offset_number = curr_shake_offset_number
-                    perctange_shake_left = \
-                        1 - time_shaken / Camera.TOTAL_SHAKE_DURATION
+                    perctange_shake_left = 1 - time_shaken / Camera.TOTAL_SHAKE_DURATION
                     self.current_shake_offset = \
-                        pygame.Vector2.from_polar(
-                            (Camera.SHAKE_MAX_MAGNITUDE * perctange_shake_left,
-                             random.random() * 360)) \
-                        / self.coord_to_pixel_factor()
+                        pygame.Vector2.from_polar((Camera.SHAKE_MAX_MAGNITUDE * perctange_shake_left,
+                                                   random.random() * 360)) / self.coord_to_pixel_factor()
         else:
             self.current_shake_offset = Vector2(0, 0)
 
@@ -327,56 +346,13 @@ def render_game_match(game, match_state):
     Handles drawing all game objects to the screen
     """
     match_state.camera.update_internal_time()
-    match_state.camera.dynamic_camera_zoom_update(match_state.player1,
-                                                  match_state.player2)
+    match_state.camera.dynamic_camera_zoom_update(match_state.player1, match_state.player2)
     match_state.camera.render_stage(match_state.stage)
     match_state.camera.render_bullets(match_state.bullets)
     if not match_state.player1.died:
-        match_state.camera.render_player_ship(match_state.player1,
-                                              GameGraphics.BLUE_SHIP_SURFACE)
+        match_state.camera.render_player_ship(match_state.player1, GameGraphics.BLUE_SHIP_SURFACE)
     if not match_state.player2.died:
-        match_state.camera.render_player_ship(match_state.player2,
-                                              GameGraphics.RED_SHIP_SURFACE)
-
-
-def handle_bullets(game, match_state):
-    """
-    Handles the destruction of bullets when they collide with objects,
-    the effects of their collision on destructable objects,
-    and spawns new bullets when players shoot
-    """
-    keys = pygame.key.get_pressed()
-    curr_time = time.time()
-    if keys[GameKeyBindings.PLAYER1_SHOOT]:
-        if curr_time - match_state.player1.last_shot_time >= \
-                PlayerShip.TIME_BETWEEN_SHOTS:
-            match_state.player1.last_shot_time = curr_time
-            ship_dir = match_state.player1.ship_direction()
-            ship_pos = match_state.player1.pos
-            new_bullet = Bullet(
-                ship_pos + ship_dir * PlayerShip.BULLET_SPAWN_DIST,
-                ship_dir * Bullet.SPEED)
-            match_state.bullets.add(new_bullet)
-
-    if keys[GameKeyBindings.PLAYER2_SHOOT]:
-        if curr_time - match_state.player2.last_shot_time >= \
-                PlayerShip.TIME_BETWEEN_SHOTS:
-            match_state.player2.last_shot_time = curr_time
-            ship_dir = match_state.player2.ship_direction()
-            ship_pos = match_state.player2.pos
-            new_bullet = Bullet(
-                ship_pos + ship_dir * PlayerShip.BULLET_SPAWN_DIST,
-                ship_dir * Bullet.SPEED)
-            match_state.bullets.add(new_bullet)
-
-    if keys[pygame.K_0]:
-        match_state.camera.start_shaking()
-
-    dt = game.clock.get_time() / 1000
-    for bullet in match_state.bullets:
-        bullet.pos_update(dt, match_state.stage, match_state)
-    match_state.bullets = set(
-        filter(lambda x: not x.destroyed, match_state.bullets))
+        match_state.camera.render_player_ship(match_state.player2, GameGraphics.RED_SHIP_SURFACE)
 
 
 def game_match_phase(game):
@@ -430,15 +406,11 @@ def game_paused_phase(game):
     game_paused_phase.end_game_button.render(game)
 
 
-game_paused_phase.resume_button = UITools.Button("RESUME", (0, 255, 0),
-                                                 UI.WHITE,
-                                                 Vector2(0.5, 0.5 + 1 / 24),
-                                                 1 / 7,
+game_paused_phase.resume_button = UITools.Button("RESUME", (0, 255, 0), UI.WHITE,
+                                                 Vector2(0.5, 0.5 + 1 / 24), 1 / 7,
                                                  GamePhase.IN_MATCH)
-game_paused_phase.end_game_button = UITools.Button("END GAME", (255, 0, 0),
-                                                   UI.WHITE,
-                                                   Vector2(0.5, 0.5 - 1 / 24),
-                                                   1 / 6,
+game_paused_phase.end_game_button = UITools.Button("END GAME", (255, 0, 0), UI.WHITE,
+                                                   Vector2(0.5, 0.5 - 1 / 24), 1 / 6,
                                                    GamePhase.INTRO_MENU)
 
 

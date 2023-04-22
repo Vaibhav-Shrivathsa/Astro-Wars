@@ -10,9 +10,8 @@ class IndestructableBlock:
         self.center = center
         self.size = size
         reflected_size = Vector2(size[0], -size[1])
-        self.collider = \
-            CollisionDetection.Rectangle(center - reflected_size / 2
-                                         , center + reflected_size / 2)
+        self.collider = CollisionDetection.Rectangle(center - reflected_size / 2,
+                                                     center + reflected_size / 2)
 
 
 class DestructableBlock:
@@ -23,9 +22,8 @@ class DestructableBlock:
         self.center = center
         self.size = size
         reflected_size = Vector2(size[0], -size[1])
-        self.collider = \
-            CollisionDetection.Rectangle(center - reflected_size / 2
-                                         , center + reflected_size / 2)
+        self.collider = CollisionDetection.Rectangle(center - reflected_size / 2,
+                                                     center + reflected_size / 2)
 
 
 class OuterBoundary:
@@ -36,17 +34,15 @@ class OuterBoundary:
         self.center = center
         self.size = size
         reflected_size = Vector2(size[0], -size[1])
-        self.collider = \
-            CollisionDetection.InvertedRectangle(center - reflected_size / 2
-                                                 , center + reflected_size / 2)
+        self.collider = CollisionDetection.InvertedRectangle(center - reflected_size / 2,
+                                                             center + reflected_size / 2)
 
 
 class Stage:
     """
     Class Representing A Level For the Game and Its Associated Objects
     """
-    def __init__(self, destructable_blocks, indestructable_blocks,
-                 outer_boundary):
+    def __init__(self, destructable_blocks, indestructable_blocks, outer_boundary):
         self.destructable_blocks = destructable_blocks
         self.indestructable_blocks = indestructable_blocks
         self.outer_boundary = outer_boundary
