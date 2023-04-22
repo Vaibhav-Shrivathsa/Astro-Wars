@@ -9,6 +9,8 @@ import Stages
 import UITools
 from GameInfo import *
 
+random.seed(time.time())
+
 
 class GameGraphics:
     ship_image_size = Vector2(100, 100)
@@ -55,7 +57,7 @@ class GameMatchState:
                              GameMatchState.CAMERA_START_POS,
                              GameMatchState.CAMERA_INIT_VIEW_SIZE)
 
-        self.stage = copy.deepcopy(Stages.PlayableStages.BASIC)
+        self.stage = copy.deepcopy(random.choice(Stages.PlayableStages.STAGELIST))
         self.outer_border = None
         self.bullets = set()
 
@@ -284,11 +286,6 @@ class Camera:
                          round(thickness * self.coord_to_pixel_factor()))
 
     def render_stage(self, stage):
-        if stage.outer_boundary is not None:
-            self.render_block(stage.outer_boundary.center,
-                              stage.outer_boundary.size,
-                              Stages.OuterBoundary.COLOR,
-                              Stages.OuterBoundary.THICKNESS)
         for destructable_block in stage.destructable_blocks:
             self.render_block(destructable_block.center,
                               destructable_block.size,
@@ -299,6 +296,11 @@ class Camera:
                               indestructable_block.size,
                               Stages.IndestructableBlock.COLOR,
                               Stages.IndestructableBlock.THICKNESS)
+        if stage.outer_boundary is not None:
+            self.render_block(stage.outer_boundary.center,
+                              stage.outer_boundary.size,
+                              Stages.OuterBoundary.COLOR,
+                              Stages.OuterBoundary.THICKNESS)
 
     def render_bullets(self, bullets):
         for bullet in bullets:
