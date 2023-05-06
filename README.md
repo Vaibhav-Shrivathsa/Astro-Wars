@@ -13,4 +13,4 @@ There are two additional stages aswell:
 <img src="https://user-images.githubusercontent.com/87554847/236590047-698e6366-9f09-4daa-990a-af5c87790eb9.png"  width="600" height="600">
 <img src="https://user-images.githubusercontent.com/87554847/236589823-1c82f632-fd16-4fea-868e-7b07c3201122.png"  width="600" height="600">
 
-Run `python main.py` while in the project directory to play.
+Run `python main.py` while in the project directory to play =)
